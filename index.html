@@ -104,6 +104,16 @@
     <p class="subtitle">Fill in your inputs and click Generate — full v4.0 blog and PDF checklist delivered instantly.</p>
   </div>
 
+  <div class="card" id="api-key-card">
+    <div class="section-label">API Key</div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <input type="password" id="api-key-input" placeholder="Paste your Anthropic API key here (sk-ant-...)" style="flex:1;" />
+      <button class="primary" onclick="saveApiKey()" style="white-space:nowrap;">Save Key</button>
+      <button onclick="clearApiKey()" style="white-space:nowrap;color:#a32d2d;">Clear</button>
+    </div>
+    <p class="hint-text" id="api-key-status">No API key saved. Paste your key above and click Save.</p>
+  </div>
+
   <div class="card">
     <div class="section-label">Article settings</div>
     <div class="row">
@@ -220,17 +230,49 @@
 let API_KEY = localStorage.getItem('modonix_api_key') || '';
 let blogResult = '', pdfResult = '', currentTopic = '';
 
-// Show API key prompt on load if not saved
-window.addEventListener('load', function() {
-  if (!API_KEY) {
-    const key = prompt('Enter your Anthropic API key to use the Modonix Blog Generator:\n\n(It will be saved in your browser only — never shared)');
-    if (key && key.trim().startsWith('sk-ant-')) {
-      API_KEY = key.trim();
-      localStorage.setItem('modonix_api_key', API_KEY);
-    } else if (key) {
-      alert('That does not look like a valid Anthropic API key. Please refresh and try again.');
-    }
+function saveApiKey() {
+  const val = document.getElementById('api-key-input').value.trim();
+  if (!val.startsWith('sk-ant-')) {
+    alert('That does not look like a valid Anthropic API key. It should start with sk-ant-');
+    return;
   }
+  API_KEY = val;
+  localStorage.setItem('modonix_api_key', API_KEY);
+  document.getElementById('api-key-input').value = '';
+  document.getElementById('api-key-input').placeholder = 'API key saved — paste a new one to replace it';
+  updateApiKeyStatus();
+}
+
+function clearApiKey() {
+  API_KEY = '';
+  localStorage.removeItem('modonix_api_key');
+  document.getElementById('api-key-input').value = '';
+  document.getElementById('api-key-input').placeholder = 'Paste your Anthropic API key here (sk-ant-...)';
+  updateApiKeyStatus();
+}
+
+function updateApiKeyStatus() {
+  const el = document.getElementById('api-key-status');
+  const card = document.getElementById('api-key-card');
+  if (API_KEY) {
+    el.textContent = 'API key saved. Ready to generate.';
+    el.style.color = '#166534';
+    card.style.borderColor = '#86efac';
+  } else {
+    el.textContent = 'No API key saved. Paste your key above and click Save Key.';
+    el.style.color = '#a32d2d';
+    card.style.borderColor = '#fca5a5';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('article-type').addEventListener('change', toggleDate);
+  document.getElementById('urls').addEventListener('input', updateUrlCount);
+  document.getElementById('failures').addEventListener('input', updateFpCount);
+  if (API_KEY) {
+    document.getElementById('api-key-input').placeholder = 'API key saved — paste a new one to replace it';
+  }
+  updateApiKeyStatus();
 });
 
 
@@ -421,7 +463,8 @@ async function callAPI(prompt, maxTokens) {
     headers: {
       'Content-Type': 'application/json',
       'x-api-key': API_KEY,
-      'anthropic-version': '2023-06-01'
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
@@ -439,13 +482,9 @@ async function callAPI(prompt, maxTokens) {
 
 async function generate() {
   if (!API_KEY) {
-    const key = prompt('Enter your Anthropic API key:');
-    if (key && key.trim().startsWith('sk-ant-')) {
-      API_KEY = key.trim();
-      localStorage.setItem('modonix_api_key', API_KEY);
-    } else {
-      alert('Valid API key required to generate.'); return;
-    }
+    alert('Please enter and save your Anthropic API key first.');
+    document.getElementById('api-key-input').focus();
+    return;
   }
   if (!validateInputs(false)) return;
   currentTopic = document.getElementById('topic').value.trim();
