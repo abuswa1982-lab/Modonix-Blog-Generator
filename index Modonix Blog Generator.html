@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modonix Blog Generator</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #0f1f4d;
+    --blue: #1a56db;
+    --blue-light: #e6f1fb;
+    --orange: #f97316;
+    --orange-light: #fff8f0;
+    --green: #166534;
+    --green-light: #f0fff4;
+    --red: #a32d2d;
+    --red-light: #fef2f2;
+    --amber: #92400e;
+    --amber-light: #fffbeb;
+    --border: #e2e8f0;
+    --text: #1a1a1a;
+    --muted: #64748b;
+    --hint: #94a3b8;
+    --bg: #ffffff;
+    --bg2: #f8faff;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    font-size: 15px;
+    color: var(--text);
+    background: #f1f5f9;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  .container {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .card {
+    background: var(--bg);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .app-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 0.25rem;
+  }
+
+  .logo {
+    width: 36px;
+    height: 36px;
+    background: var(--navy);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .logo span {
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+    padding-left: 50px;
+  }
+
+  .section {
+    margin-bottom: 1.75rem;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--hint);
+    margin-bottom: 10px;
+  }
+
+  .field { margin-bottom: 1rem; }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 5px;
+  }
+
+  input[type="text"], textarea, select {
+    width: 100%;
+    padding: 9px 12px;
+    font-size: 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--text);
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    line-height: 1.5;
+  }
+
+  input[type="text"]:focus, textarea:focus, select:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(26,86,219,0.1);
+  }
+
+  textarea { resize: vertical; }
+
+  .hint-text {
+    font-size: 12px;
+    color: var(--hint);
+    margin-top: 5px;
+    line-height: 1.5;
+  }
+
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+  .counter {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: #f1f5f9;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    margin-left: 8px;
+    vertical-align: middle;
+    transition: all 0.2s;
+  }
+  .counter.active { background: var(--blue-light); color: var(--blue); border-color: #93c5fd; }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 1.75rem 0; }
+
+  .alert {
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    display: none;
+  }
+  .alert.show { display: block; }
+  .alert-warning { background: var(--amber-light); border: 1px solid #fcd34d; color: var(--amber); }
+  .alert-error { background: var(--red-light); border: 1px solid #fca5a5; color: var(--red); }
+  .alert-success { background: var(--green-light); border: 1px solid #86efac; color: var(--green); }
+
+  .alert-title { font-weight: 600; margin-bottom: 4px; }
+  .alert ul { padding-left: 16px; margin-top: 6px; }
+  .alert li { margin-bottom: 3px; }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  button {
+    padding: 9px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    white-space: nowrap;
+  }
+
+  button:hover { background: var(--bg2); }
+  button:active { transform: scale(0.98); }
+
+  button.primary {
+    background: var(--blue);
+    color: #fff;
+    border-color: var(--blue);
+  }
+  button.primary:hover { background: #1347c8; border-color: #1347c8; }
+
+  button.secondary {
+    background: var(--bg2);
+    border-color: var(--border);
+  }
+
+  .preview-wrap {
+    margin-top: 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: none;
+  }
+  .preview-wrap.show { display: block; }
+
+  .preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 14px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .preview-body {
+    padding: 14px;
+    font-size: 12px;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    color: var(--muted);
+    max-height: 200px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    background: var(--bg);
+    line-height: 1.6;
+  }
+
+  .copy-btn {
+    padding: 4px 10px;
+    font-size: 11px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--muted);
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .copy-btn:hover { background: var(--bg2); }
+
+  .copy-btn.copied { color: var(--green); border-color: #86efac; }
+
+  .powered {
+    text-align: center;
+    font-size: 11px;
+    color: var(--hint);
+    margin-top: 1.5rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="card">
+    <div class="app-header">
+      <div class="logo"><span>M</span></div>
+      <h1>Modonix Blog Generator</h1>
+    </div>
+    <p class="subtitle">Fill in your inputs — the full v4.0 master prompt runs automatically.</p>
+  </div>
+
+  <div class="card">
+
+    <div class="section-label">Article settings</div>
+
+    <div class="row">
+      <div class="field">
+        <label>Topic / primary keyword</label>
+        <input type="text" id="topic" placeholder="e.g. How to reduce eBay fees" />
+      </div>
+      <div class="field">
+        <label>Article type</label>
+        <select id="article-type" onchange="toggleDate()">
+          <option value="new">New article</option>
+          <option value="update">Update to existing article</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field" id="date-field" style="display:none;">
+      <label>Update month</label>
+      <input type="text" id="update-month" placeholder="e.g. April 2026" />
+      <p class="hint-text">Article will say "Updated April 2026" in the date line.</p>
+    </div>
+
+    <hr>
+
+    <div class="section-label">
+      Source URLs
+      <span class="counter" id="url-count">0 URLs</span>
+    </div>
+    <div class="field">
+      <textarea id="urls" rows="7"
+        placeholder="Paste all your source URLs here — one per line.&#10;&#10;These can be Reddit threads, news articles, industry reports, forum posts, YouTube videos, or any real external link relevant to your topic.&#10;&#10;https://www.reddit.com/r/ecommerce/comments/...&#10;https://www.reddit.com/r/smallbusiness/comments/...&#10;https://www.nytimes.com/..."
+        oninput="updateUrlCount()"></textarea>
+      <p class="hint-text">Optional but recommended. Any real URL works — Reddit, news, forums, reports. These become external citations in the blog. Leave blank if you have no sources.</p>
+    </div>
+
+    <hr>
+
+    <div class="section-label">
+      Failure points
+      <span class="counter" id="fp-count">0 points</span>
+    </div>
+    <div class="field">
+      <textarea id="failures" rows="10"
+        placeholder="Paste all your failure points here — one per line.&#10;&#10;These become the failure sections in the blog. Each one should describe a real operational or financial problem related to your topic.&#10;&#10;Revenue looks great but bank account is always empty&#10;Growing sales but profits disappearing into fees&#10;Cash flow collapsing because customers pay invoices late..."
+        oninput="updateFpCount()"></textarea>
+      <p class="hint-text">One failure point per line. Aim for 8 to 15 points for a complete blog.</p>
+    </div>
+
+    <hr>
+
+    <div id="validation-alert" class="alert"></div>
+
+    <div class="actions">
+      <button class="primary" onclick="generate()">Generate blog ↗</button>
+      <button class="secondary" onclick="validateInputs(true)">Check inputs</button>
+      <button onclick="previewPrompt()">Preview prompt</button>
+      <button onclick="clearAll()">Clear all</button>
+    </div>
+
+    <div class="preview-wrap" id="preview-wrap">
+      <div class="preview-header">
+        Prompt preview — this is what gets sent to Claude
+        <button class="copy-btn" id="copy-btn" onclick="copyPrompt()">Copy</button>
+      </div>
+      <div class="preview-body" id="preview-body"></div>
+    </div>
+
+  </div>
+
+  <p class="powered">Modonix Blog Generator &bull; v4.0 &bull; Built for Ahmed Abuswa</p>
+
+</div>
+
+<script>
+function toggleDate() {
+  const v = document.getElementById('article-type').value;
+  document.getElementById('date-field').style.display = v === 'update' ? 'block' : 'none';
+}
+
+function getUrls() {
+  return document.getElementById('urls').value
+    .split('\n').map(l => l.trim()).filter(l => l.startsWith('http'));
+}
+
+function getFailures() {
+  return document.getElementById('failures').value
+    .split('\n').map(l => l.trim()).filter(l => l.length > 0);
+}
+
+function updateUrlCount() {
+  const n = getUrls().length;
+  const el = document.getElementById('url-count');
+  el.textContent = n + ' URL' + (n !== 1 ? 's' : '');
+  el.className = 'counter' + (n > 0 ? ' active' : '');
+}
+
+function updateFpCount() {
+  const n = getFailures().length;
+  const el = document.getElementById('fp-count');
+  el.textContent = n + ' point' + (n !== 1 ? 's' : '');
+  el.className = 'counter' + (n > 0 ? ' active' : '');
+}
+
+function showAlert(type, title, lines) {
+  const el = document.getElementById('validation-alert');
+  el.className = 'alert alert-' + type + ' show';
+  el.innerHTML = '<div class="alert-title">' + title + '</div>' +
+    (lines.length ? '<ul>' + lines.map(l => '<li>' + l + '</li>').join('') + '</ul>' : '');
+}
+
+function hideAlert() {
+  document.getElementById('validation-alert').className = 'alert';
+}
+
+function extractKeywords(text) {
+  return text.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/)
+    .filter(w => w.length > 3);
+}
+
+function topicMatchScore(topic, content) {
+  const topicWords = extractKeywords(topic);
+  const contentWords = new Set(extractKeywords(content));
+  if (topicWords.length === 0) return 0;
+  const matches = topicWords.filter(w => contentWords.has(w)).length;
+  return matches / topicWords.length;
+}
+
+function validateInputs(showOk) {
+  const topic = document.getElementById('topic').value.trim();
+  const urls = getUrls();
+  const failures = getFailures();
+  const issues = [];
+  const warnings = [];
+
+  if (!topic) {
+    issues.push('Topic is empty. Please enter your primary keyword or article title.');
+  }
+
+  if (failures.length === 0) {
+    issues.push('No failure points found. Please paste at least 3 failure points related to your topic.');
+  } else if (failures.length < 3) {
+    warnings.push('Only ' + failures.length + ' failure point(s). Aim for 8 to 15 for a complete blog.');
+  }
+
+  if (issues.length > 0) {
+    showAlert('error', 'Cannot generate — please fix these issues:', issues);
+    return false;
+  }
+
+  if (topic && failures.length > 0) {
+    const combinedFailures = failures.join(' ');
+    const failureScore = topicMatchScore(topic, combinedFailures);
+
+    if (failureScore < 0.15) {
+      warnings.push(
+        'Your failure points may not match your topic "' + topic + '". ' +
+        'Check that the failure points describe problems related to this specific topic.'
+      );
+    }
+
+    if (urls.length > 0) {
+      const combinedUrls = urls.join(' ');
+      const urlScore = topicMatchScore(topic, combinedUrls);
+      if (urlScore < 0.1 && urls.length >= 3) {
+        warnings.push(
+          'Some source URLs may not be related to your topic. ' +
+          'Make sure the links you pasted are about "' + topic + '".'
+        );
+      }
+    }
+  }
+
+  if (warnings.length > 0) {
+    showAlert('warning', 'Check before continuing:', warnings);
+    return true;
+  }
+
+  hideAlert();
+  if (showOk) {
+    showAlert('success', 'All inputs look good. Ready to generate.', []);
+  }
+  return true;
+}
+
+function buildPrompt() {
+  const topic = document.getElementById('topic').value.trim();
+  const type = document.getElementById('article-type').value;
+  const month = document.getElementById('update-month').value.trim();
+  const urls = getUrls();
+  const failures = getFailures();
+
+  const dateNote = type === 'update'
+    ? 'NOTE: This is an UPDATE to an existing article. Use "Updated ' + (month || 'the current month') + '" in the meta paragraph date line.'
+    : 'NOTE: This is a NEW article. Use today\'s date in the meta paragraph.';
+
+  const urlBlock = urls.length > 0
+    ? urls.join('\n')
+    : '(No source URLs provided — omit external citation boxes)';
+
+  const failureBlock = failures.map((l, i) => (i + 1) + '. ' + l).join('\n');
+
+  return `You are a senior e-commerce operator, Amazon growth strategist, and profitability systems expert writing for Modonix.com.
+
+You write publish-ready authority blog posts that sound like they come from someone who runs profitable e-commerce businesses. Every paragraph must explain an economic consequence or operational mechanism. No filler. No motivational talk. No surface tips. No em dashes anywhere in the article.
+
+${dateNote}
+
+________________________________________
+YOUR INPUTS:
+
+TOPIC / PRIMARY KEYWORD: [${topic}]
+
+________________________________________
+SOURCE URLS:
+${urlBlock}
+
+________________________________________
+FAILURE POINTS:
+${failureBlock}
+
+________________________________________
+Run the full Modonix Blog Master Prompt v4.0 system:
+
+- CSS design system with all components (style block, schema hint, all CSS classes)
+- Featured snippet bait block (.snippet-block) immediately after opening paragraph
+- All source URLs as visible .reddit-source orange boxes placed inside the relevant failure sections
+- Damage callout boxes with specific dollar amounts in every failure section
+- Proof element blocks (.proof-block) with real stats or client outcomes
+- Mid-article CTA boxes (2 minimum)
+- Common mistakes section H2
+- Conversion trigger paragraph before final CTA
+- Final dark navy CTA box
+- Green checklist download box (.checklist-box)
+- Author box (.author-box)
+- All 4 internal links: services, tools, pricing, blog
+- Zero em dashes throughout
+- 3,000+ words minimum
+
+Output TWO deliverables clearly labeled:
+
+DELIVERABLE 1 — BLOG POST:
+Full blog HTML with CSS style block at top. HTML comments at very top: meta title, meta description, URL slug, focus keyword, secondary keywords, schema type.
+
+DELIVERABLE 2 — PDF CHECKLIST CONTENT:
+== PDF CHECKLIST CONTENT — SEND THIS TO CLAUDE TO BUILD THE PDF ==
+[checklist content]
+== END PDF CHECKLIST CONTENT ==`;
+}
+
+function generate() {
+  if (!validateInputs(false)) return;
+
+  const prompt = buildPrompt();
+
+  if (typeof sendPrompt === 'function') {
+    sendPrompt(prompt);
+  } else {
+    document.getElementById('preview-body').textContent = prompt;
+    document.getElementById('preview-wrap').className = 'preview-wrap show';
+    showAlert('success', 'Prompt ready. Copy it and paste into Claude.', []);
+  }
+}
+
+function previewPrompt() {
+  const topic = document.getElementById('topic').value.trim();
+  if (!topic) { showAlert('error', 'Please enter a topic first.', []); return; }
+
+  const prompt = buildPrompt();
+  document.getElementById('preview-body').textContent = prompt;
+  document.getElementById('preview-wrap').className = 'preview-wrap show';
+}
+
+function copyPrompt() {
+  const text = document.getElementById('preview-body').textContent;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copied!';
+    btn.className = 'copy-btn copied';
+    setTimeout(() => { btn.textContent = 'Copy'; btn.className = 'copy-btn'; }, 2000);
+  });
+}
+
+function clearAll() {
+  document.getElementById('topic').value = '';
+  document.getElementById('update-month').value = '';
+  document.getElementById('article-type').value = 'new';
+  document.getElementById('date-field').style.display = 'none';
+  document.getElementById('urls').value = '';
+  document.getElementById('failures').value = '';
+  document.getElementById('preview-wrap').className = 'preview-wrap';
+  hideAlert();
+  updateUrlCount();
+  updateFpCount();
+}
+</script>
+</body>
+</html>
