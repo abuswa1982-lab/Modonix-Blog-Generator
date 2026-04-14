@@ -678,201 +678,124 @@ function downloadBlog() {
 
 function downloadPDF() {
   if (!pdfResult) { alert('No PDF content. Please generate first.'); return; }
-  const btn = document.getElementById('pdf-dl-btn');
-  if (btn) { btn.textContent = 'Building PDF...'; btn.disabled = true; }
 
-  // Load jsPDF dynamically if not already loaded
-  function runPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const lines = pdfResult.split('\n');
+  let body = '', inSection = false, rowIdx = 0, inScoring = false;
 
-    const NAVY=[15,31,77], BLUE=[26,86,219], WHITE=[255,255,255];
-    const BORDER=[226,232,240], TEXT=[26,26,26], MUTED=[100,116,139];
-    const LIGHT=[248,250,255], BLUE_LIGHT=[230,241,251];
-    const RED_BG=[254,242,242], AMBER_BG=[255,251,235], GREEN_BG=[240,255,244];
-    const RED_TC=[127,29,29], AMBER_TC=[146,64,14], GREEN_TC=[20,83,45];
+  for (const line of lines) {
+    const t = line.trim();
+    if (!t || t.startsWith('TITLE:') || t.startsWith('==')) continue;
 
-    const pW=210, pH=297, mL=16, mR=16, cW=178;
-    let y=0, rowIdx=0;
-
-    function np(n){ if(y+n>pH-14){ doc.addPage(); y=16; } }
-
-    // ── HEADER ──────────────────────────────────────────────
-    doc.setFillColor(...NAVY);
-    doc.rect(0,0,pW,46,'F');
-
-    doc.setFillColor(...BLUE);
-    doc.roundedRect(mL,7,16,16,2,2,'F');
-    doc.setTextColor(...WHITE);
-    doc.setFontSize(12); doc.setFont('helvetica','bold');
-    doc.text('M',mL+8,18,{align:'center'});
-
-    const titleText = currentTopic||'Operator Checklist';
-    doc.setFontSize(13); doc.setFont('helvetica','bold');
-    doc.setTextColor(...WHITE);
-    const titleLines = doc.splitTextToSize(titleText, cW-22);
-    titleLines.forEach((ln,i)=>doc.text(ln,mL+20,14+i*6));
-
-    doc.setFontSize(8); doc.setFont('helvetica','normal');
-    doc.setTextColor(197,208,240);
-    doc.text('25-Point Operator Self-Audit  |  modonix.com',mL+20,27);
-    doc.setTextColor(147,175,245);
-    doc.text('Written by Ahmed Abuswa, Head of E-Commerce Operations at Modonix',mL+20,33);
-
-    doc.setFillColor(...BLUE);
-    doc.rect(0,46,pW,2.5,'F');
-
-    // ── INTRO BOX ───────────────────────────────────────────
-    doc.setFillColor(...BLUE_LIGHT);
-    doc.rect(mL,52,cW,12,'F');
-    doc.setDrawColor(...BLUE); doc.setLineWidth(0.5);
-    doc.rect(mL,52,3,12,'F');
-    doc.setTextColor(...NAVY); doc.setFontSize(8); doc.setFont('helvetica','normal');
-    doc.text('How to use: Go through each section and check every box that applies. Tally your',mL+6,58,{maxWidth:cW-8});
-    doc.text('score at the end. Any unchecked box is a documented operational gap.',mL+6,63,{maxWidth:cW-8});
-
-    y=70;
-
-    // ── PARSE & RENDER ───────────────────────────────────────
-    const lines = pdfResult.split('\n');
-    for(let i=0;i<lines.length;i++){
-      const t=lines[i].trim();
-      if(!t||t.startsWith('TITLE:')||t.startsWith('==')) continue;
-
-      if(t.startsWith('SECTION:')){
-        np(16); rowIdx=0; y+=3;
-        doc.setFillColor(...NAVY); doc.rect(mL,y,cW,9,'F');
-        doc.setFillColor(...BLUE); doc.rect(mL,y,3.5,9,'F');
-        doc.setTextColor(...WHITE); doc.setFontSize(8.5); doc.setFont('helvetica','bold');
-        doc.text(t.replace(/^SECTION:\s*/,'').substring(0,72),mL+6,y+6.2);
-        y+=10; continue;
-      }
-
-      if(t.startsWith('- ')){
-        rowIdx++;
-        const txt=t.replace(/^-\s*/,'');
-        const wrapped=doc.splitTextToSize(txt,cW-22);
-        const rH=Math.max(10,wrapped.length*5+5);
-        np(rH);
-        doc.setFillColor(...(rowIdx%2===0?LIGHT:WHITE));
-        doc.rect(mL,y,cW,rH,'F');
-        doc.setDrawColor(...BORDER); doc.setLineWidth(0.2);
-        doc.rect(mL,y,cW,rH,'S');
-        // row number
-        doc.setFillColor(232,236,245);
-        doc.rect(mL,y,9,rH,'F');
-        doc.setTextColor(120,136,176); doc.setFontSize(7); doc.setFont('helvetica','normal');
-        doc.text(String(rowIdx),mL+4.5,y+rH/2+2.5,{align:'center'});
-        // checkbox
-        doc.setFillColor(...WHITE); doc.setDrawColor(148,163,184); doc.setLineWidth(0.5);
-        doc.rect(mL+12,y+rH/2-2.5,5,5,'FD');
-        // text
-        doc.setTextColor(...TEXT); doc.setFontSize(8.5); doc.setFont('helvetica','normal');
-        wrapped.forEach((ln,idx)=>doc.text(ln,mL+20,y+7+idx*5));
-        y+=rH+0.5; continue;
-      }
-
-      if(t==='SCORING:'){
-        np(16); y+=6;
-        doc.setFillColor(...BLUE); doc.rect(mL,y,cW,1,'F'); y+=3;
-        doc.setFillColor(...NAVY); doc.rect(mL,y,cW,9,'F');
-        doc.setFillColor(...BLUE); doc.rect(mL,y,3.5,9,'F');
-        doc.setTextColor(...WHITE); doc.setFontSize(8.5); doc.setFont('helvetica','bold');
-        doc.text('SCORING GUIDE',mL+6,y+6.2); y+=10;
-        doc.setFillColor(26,48,112); doc.rect(mL,y,cW,8,'F');
-        doc.setTextColor(...WHITE); doc.setFontSize(8); doc.setFont('helvetica','bold');
-        doc.text('Score',mL+3,y+5.5);
-        doc.text('Level',mL+26,y+5.5);
-        doc.text('What it means',mL+58,y+5.5);
-        y+=9; continue;
-      }
-
-      const sm=t.match(/^(\d+[-–]\d+):\s*(.*)/);
-      const nm=t.match(/^(Critical|Moderate|Strong)[^\w](.*)/i);
-      if(sm||nm){
-        np(11);
-        const score=sm?sm[1]:'';
-        const rest=sm?sm[2]:(nm?nm[0]:t);
-        const level=(rest.match(/^(Critical|Moderate|Strong)/i)||[])[1]||'';
-        const desc=rest.replace(/^(Critical|Moderate|Strong)[^\w]*/i,'');
-        const lc=level.toLowerCase();
-        const bg=lc==='critical'?RED_BG:lc==='strong'?GREEN_BG:AMBER_BG;
-        const tc=lc==='critical'?RED_TC:lc==='strong'?GREEN_TC:AMBER_TC;
-        doc.setFillColor(...bg); doc.rect(mL,y,cW,10,'F');
-        doc.setDrawColor(...BORDER); doc.setLineWidth(0.2); doc.rect(mL,y,cW,10,'S');
-        doc.setFontSize(8.5); doc.setFont('helvetica','bold');
-        doc.setTextColor(...NAVY); doc.text(score||'',mL+3,y+7);
-        doc.setTextColor(...tc); doc.text(level.toUpperCase(),mL+26,y+7);
-        doc.setFont('helvetica','normal'); doc.setTextColor(...MUTED);
-        doc.text(desc.substring(0,88),mL+58,y+7);
-        y+=11; continue;
-      }
-
-      if(t.startsWith('CTA:')){
-        np(22); y+=4;
-        doc.setFillColor(...BLUE); doc.roundedRect(mL,y,cW,16,3,3,'F');
-        doc.setTextColor(...WHITE); doc.setFontSize(9); doc.setFont('helvetica','bold');
-        const ctaW=doc.splitTextToSize(t.replace(/^CTA:\s*/,''),cW-12);
-        ctaW.forEach((ln,idx)=>doc.text(ln,mL+cW/2,y+8+idx*5.5,{align:'center'}));
-        y+=20; continue;
-      }
+    if (t.startsWith('SECTION:')) {
+      if (inSection) body += '</tbody></table></div>';
+      rowIdx = 0;
+      body += '<div class="psec"><div class="psh">' + t.replace(/^SECTION:\s*/,'') + '</div><table><tbody>';
+      inSection = true;
+    } else if (t.startsWith('- ')) {
+      rowIdx++;
+      body += '<tr class="' + (rowIdx%2===0?'pev':'pod') + '"><td class="pnum">' + rowIdx + '</td><td class="pcb"></td><td class="pit">' + t.replace(/^-\s*/,'') + '</td></tr>';
+    } else if (t === 'SCORING:') {
+      if (inSection) { body += '</tbody></table></div>'; inSection = false; }
+      inScoring = true;
+      body += '<div class="psec psg"><div class="psh">SCORING GUIDE</div><table><thead><tr><th class="ps1">Score</th><th class="ps2">Level</th><th>What it means</th></tr></thead><tbody>';
+    } else if (inScoring && t.match(/^\d+[-\u2013]\d+:/)) {
+      const c = t.indexOf(':'), sc = t.substring(0,c), rest = t.substring(c+1).trim();
+      const lv = (rest.match(/^(Critical|Moderate|Strong)/i)||[''])[0];
+      const desc = rest.replace(/^(Critical|Moderate|Strong)[^\w]*/i,'');
+      body += '<tr class="psr ' + lv.toLowerCase() + '"><td class="psn">' + sc + '</td><td class="psl">' + lv.toUpperCase() + '</td><td>' + desc + '</td></tr>';
+    } else if (inScoring && t.match(/^(Critical|Moderate|Strong)[^\w]/i)) {
+      const lv = (t.match(/^(Critical|Moderate|Strong)/i)||[''])[0];
+      const desc = t.replace(/^(Critical|Moderate|Strong)[^\w]*/i,'');
+      body += '<tr class="psr ' + lv.toLowerCase() + '"><td class="psn">-</td><td class="psl">' + lv.toUpperCase() + '</td><td>' + desc + '</td></tr>';
+    } else if (t.startsWith('CTA:')) {
+      if (inScoring) { body += '</tbody></table></div>'; inScoring = false; }
+      body += '<div class="pcta">' + t.replace(/^CTA:\s*/,'') + '</div>';
     }
-
-    // ── AUTHOR SECTION ───────────────────────────────────────
-    np(38); y+=8;
-    doc.setFillColor(...BORDER); doc.rect(mL,y,cW,0.5,'F'); y+=5;
-    doc.setFillColor(248,250,255); doc.roundedRect(mL,y,cW,30,3,3,'F');
-    doc.setDrawColor(...BORDER); doc.setLineWidth(0.3); doc.roundedRect(mL,y,cW,30,3,3,'S');
-    doc.setFillColor(...BLUE); doc.circle(mL+11,y+15,7,'F');
-    doc.setTextColor(...WHITE); doc.setFontSize(9); doc.setFont('helvetica','bold');
-    doc.text('AA',mL+11,y+18,{align:'center'});
-    doc.setTextColor(...NAVY); doc.setFontSize(10); doc.setFont('helvetica','bold');
-    doc.text('Ahmed Abuswa',mL+22,y+10);
-    doc.setFontSize(8.5); doc.setFont('helvetica','normal'); doc.setTextColor(...MUTED);
-    doc.text('Head of E-Commerce Operations at Modonix',mL+22,y+16);
-    doc.text('E-Commerce Systems & Operations Consulting',mL+22,y+21);
-    doc.setTextColor(...BLUE); doc.setFontSize(8);
-    doc.text('modonix.com  |  modonix.com/services',mL+22,y+27);
-
-    // ── PAGE FOOTERS ─────────────────────────────────────────
-    const totalPages=doc.internal.getNumberOfPages();
-    for(let p=1;p<=totalPages;p++){
-      doc.setPage(p);
-      doc.setFillColor(...NAVY); doc.rect(0,pH-12,pW,12,'F');
-      doc.setTextColor(...WHITE); doc.setFontSize(7.5); doc.setFont('helvetica','bold');
-      doc.text('Ahmed Abuswa',mL,pH-6);
-      doc.setFont('helvetica','normal'); doc.setTextColor(197,208,240);
-      doc.text('  |  Head of E-Commerce Operations at Modonix  |  modonix.com',mL+26,pH-6);
-      doc.setTextColor(147,175,245);
-      doc.text('Page '+p+'/'+totalPages,pW-mR,pH-6,{align:'right'});
-    }
-
-    const slug=(currentTopic||'modonix').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').substring(0,45);
-    doc.save(slug+'-checklist.pdf');
-    if(btn){btn.textContent='Download PDF';btn.disabled=false;}
   }
+  if (inSection) body += '</tbody></table></div>';
+  if (inScoring) body += '</tbody></table></div>';
 
-  // Load jsPDF if not already present
-  if(window.jspdf && window.jspdf.jsPDF){
-    runPDF();
-  } else {
-    // Check if running as local file — CDN won't load from file://
-    if(window.location.protocol === 'file:') {
-      if(btn){btn.textContent='Download PDF';btn.disabled=false;}
-      alert('PDF download requires the app to be hosted online (GitHub Pages).\n\nTo get your PDF now:\n1. Upload this index.html to GitHub Pages\n2. Open your live URL\n3. Generate and click Download PDF\n\nOr use the separate supplier_checklist.pdf file I already built for you.');
-      return;
-    }
-    const s=document.createElement('script');
-    s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-    s.onload=function(){ runPDF(); };
-    s.onerror=function(){
-      if(btn){btn.textContent='Download PDF';btn.disabled=false;}
-      alert('Could not load PDF library. Please check your internet connection and try again.');
-    };
-    document.head.appendChild(s);
-  }
+  const title = currentTopic || 'Operator Checklist';
+
+  // Build the print content inside the existing blog-iframe modal
+  const iframe = document.getElementById('blog-iframe');
+  const doc = iframe.contentDocument || iframe.contentWindow.document;
+
+  const css = `
+    @page{size:A4;margin:12mm 14mm 14mm 14mm}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,sans-serif;font-size:9.5px;color:#1a1a1a}
+    .phdr{background:#0f1f4d;padding:14px 0 12px}
+    .phi{display:flex;align-items:flex-start;gap:12px}
+    .plogo{background:#1a56db;border-radius:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
+    .pht{font-size:13px;font-weight:700;color:#fff;line-height:1.3}
+    .phs{font-size:7.5px;color:#c5d0f0;margin-top:2px}
+    .pha{font-size:7.5px;color:#93aff5;margin-top:1px}
+    .pbar{background:#1a56db;height:2.5px}
+    .pintro{background:#e6f1fb;border-left:4px solid #1a56db;padding:5px 9px;margin:7px 0;font-size:8px;color:#0f1f4d;line-height:1.5}
+    .psec{margin-bottom:9px;border:1px solid #e2e8f0;border-radius:4px;overflow:hidden}
+    .psg{margin-top:10px}
+    .psh{background:#0f1f4d;color:#fff;padding:5px 7px 5px 11px;font-size:8.5px;font-weight:700;border-left:4px solid #1a56db}
+    table{width:100%;border-collapse:collapse}
+    thead tr{background:#1a3070}
+    th{color:#fff;padding:4px 5px;font-size:7.5px;font-weight:700;text-align:left}
+    th.ps1{width:52px}th.ps2{width:62px}
+    tr.pev{background:#f8faff}tr.pod{background:#fff}
+    td{padding:4px 3px;border-bottom:1px solid #f1f5f9;font-size:8.5px;vertical-align:middle}
+    td.pnum{width:18px;background:#e8ecf5;color:#7888b0;font-size:7px;text-align:center;padding:4px 0}
+    td.pcb{width:13px;min-width:13px}
+    td.pcb::before{content:"";display:block;width:10px;height:10px;border:1.5px solid #94a3b8;border-radius:2px;margin:1px auto}
+    td.pit{line-height:1.4}
+    tr.psr td{padding:4px 5px;font-size:8px}
+    td.psn{font-weight:700;color:#0f1f4d;width:52px}td.psl{width:62px;font-weight:700}
+    tr.psr.critical{background:#fef2f2}tr.psr.critical .psl{color:#7f1d1d}
+    tr.psr.moderate{background:#fffbeb}tr.psr.moderate .psl{color:#92400e}
+    tr.psr.strong{background:#f0fff4}tr.psr.strong .psl{color:#14532d}
+    .pcta{background:#1a56db;color:#fff;padding:9px 12px;border-radius:4px;font-size:9px;font-weight:700;text-align:center;margin:9px 0;line-height:1.4}
+    .pauthor{border-top:2px solid #e2e8f0;margin:12px 0 0;padding:10px 0;display:flex;gap:9px;align-items:flex-start}
+    .pav{background:#1a56db;color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:700;flex-shrink:0}
+    .pan{font-size:9.5px;font-weight:700;color:#0f1f4d;margin-bottom:1px}
+    .pat{font-size:7.5px;color:#64748b;line-height:1.4}
+    .pas{font-size:7.5px;color:#1a56db;margin-top:1px}
+    .pfoot{position:fixed;bottom:-14mm;left:-14mm;right:-14mm;height:10mm;background:#0f1f4d;display:flex;align-items:center;justify-content:space-between;padding:0 14mm;font-size:7px}
+    .pfl{color:#c5d0f0}.pfr{color:#93aff5}
+    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+  `;
+
+  doc.open();
+  doc.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title><style>${css}</style></head><body>
+<div class="phdr"><div class="phi">
+<div class="plogo">M</div>
+<div><div class="pht">${title}</div>
+<div class="phs">25-Point Operator Self-Audit | modonix.com</div>
+<div class="pha">Written by Ahmed Abuswa, Head of E-Commerce Operations at Modonix</div>
+</div></div></div>
+<div class="pbar"></div>
+<div class="pintro">How to use: Go through each section and check every box that applies. Tally your score at the end. Any unchecked box is a documented operational gap.</div>
+${body}
+<div class="pauthor"><div class="pav">AA</div><div>
+<div class="pan">Ahmed Abuswa</div>
+<div class="pat">Head of E-Commerce Operations at Modonix</div>
+<div class="pat">E-Commerce Systems &amp; Operations Consulting</div>
+<div class="pas">modonix.com | modonix.com/services</div>
+</div></div>
+<div class="pfoot"><span class="pfl"><strong>Ahmed Abuswa</strong> | Head of E-Commerce Operations at Modonix | modonix.com</span><span class="pfr">modonix.com/services</span></div>
+</body></html>`);
+  doc.close();
+
+  // Update modal header and toolbar for PDF print mode
+  document.querySelector('#blog-modal .modal-header-title').textContent = 'PDF Checklist — Click "Save as PDF" to download';
+  const toolbar = document.querySelector('#blog-modal .modal-toolbar');
+  toolbar.innerHTML = '<button onclick="document.getElementById(\'blog-iframe\').contentWindow.print()" style="background:#1a56db;color:#fff;border:none;padding:8px 20px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;margin-right:6px">Save as PDF</button><span style="font-size:12px;color:#64748b">Print dialog opens &rarr; change destination to "Save as PDF" &rarr; Save</span>';
+
+  // Show the modal
+  document.getElementById('blog-modal').className = 'modal-overlay show';
+
+  // Trigger print after a short delay so the modal renders first
+  setTimeout(() => {
+    document.getElementById('blog-iframe').contentWindow.print();
+  }, 800);
 }
-
 
 function clearAll() {
   ['topic','update-month','urls','failures'].forEach(id=>document.getElementById(id).value='');
