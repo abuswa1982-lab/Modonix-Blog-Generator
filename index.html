@@ -455,15 +455,17 @@ FAILURE POINTS — GROUP related failure points into 6 to 9 thematic H2 sections
 
 ${fpBlock}
 
-NUMBERS RULE — CRITICAL. Use numbers from three sources only, in this priority order:
+NUMBERS RULE — CRITICAL. Follow this exact sequence for every section:
 
-1. REDDIT QUOTES — Read every source URL provided. Extract real figures operators mention in those threads (e.g. "losing 15% margin", "reconciliation took 6 hours", "oversold 40 units"). Use these directly, attributed to the Reddit thread as a .reddit-source citation box. These are your strongest numbers.
+1. FETCH THE SOURCE URL — For every URL provided, attempt to read that page directly. It could be Reddit, a forum, a blog, a news article, or any site. Extract real quotes, specific numbers, operator stories, and data points from the actual page content. These are your strongest material — use them directly with a .reddit-source citation box. A real quote like "we were losing 15% margin every month" is worth more than any benchmark.
 
-2. INDUSTRY BENCHMARKS — You may use widely published industry-standard benchmarks for e-commerce operations (stockout rates, average reconciliation time, multi-channel sync error rates, Amazon fee percentages, etc.) BUT you must label every single one explicitly as "industry average" or "industry benchmark" — never state them as facts specific to Modonix clients.
+2. IF THE URL IS NOT ACCESSIBLE — fall back to the failure point description itself. That failure point was derived from that URL and represents real operator pain. Treat the failure point language as a direct signal of what that community was discussing. Use the failure point as your content anchor and write the section around the specific mechanism it describes.
 
-3. VARIABLE FORMULAS — For any section where no Reddit number and no industry benchmark applies, write a named formula using variables the reader fills in with their own data. Example: "Oversell Damage = Units Oversold × Average Order Value × Channel Penalty Rate". This is more powerful than an invented number because it is personal to each reader's operation.
+3. INDUSTRY BENCHMARKS — Where real URL data is unavailable, you may use widely published industry-standard benchmarks (Amazon fee structures, average stockout rates, typical reconciliation time for multi-channel operations, etc.). Label every benchmark explicitly as "industry average" or "industry benchmark" — never present it as a Modonix client fact.
 
-DO NOT invent, assume, or fabricate any specific dollar figure, percentage, or timeline. Every number must come from one of the three sources above.
+4. VARIABLE FORMULAS — For any section where no URL data and no applicable benchmark exists, write a named formula using operator variables. Example: "Oversell Damage = Units Oversold × Average Order Value × Channel Penalty Rate". This is more useful than a generic statement because it is personally calculable.
+
+The failure point is the guaranteed floor — never fall below it into generic filler. Every section must explain a real mechanism, not describe a concept.
 
 INTERNAL LINKS RULE — CRITICAL: You may only link to these four confirmed URLs. No other internal Modonix links exist — do not invent any other pages, subpages, or article links:
 - https://modonix.com/services
