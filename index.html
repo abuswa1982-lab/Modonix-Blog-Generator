@@ -508,49 +508,113 @@ CSS CLASSES: body,h1,h2,h3,p,blockquote,blockquote strong,table,th,td,tr:nth-chi
 
 ===PDF_CHECKLIST_START===
 
-After the blog HTML, output the line above exactly, then this checklist format — nothing else:
+===PDF_CHECKLIST_START===
 
-TITLE: ${topic} Operator Checklist — 25-Point Self-Audit
+After the blog HTML, output the line above exactly, then this checklist in complete HTML format:
 
-SECTION: [Section 1 name]
-- [Yes/No operational question]
-- [Yes/No operational question]
-- [Yes/No operational question]
-- [Yes/No operational question]
-- [Yes/No operational question]
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>${topic} — 25-Point Self-Audit</title>
+<style>
+@page { size: A4; margin: 13mm 15mm 15mm 15mm; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, Helvetica, sans-serif; font-size: 9.5px; color: #1a1a1a; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.hdr { background: #0f1f4d; padding: 14px 16px 12px; }
+.hi { display: flex; align-items: flex-start; gap: 12px; }
+.hl { background: #1a56db; border-radius: 4px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: #fff; flex-shrink: 0; }
+.ht { font-size: 13px; font-weight: 700; color: #fff; line-height: 1.3; margin-bottom: 3px; }
+.hs { font-size: 7.5px; color: #c5d0f0; }
+.ha { font-size: 7.5px; color: #93aff5; margin-top: 1px; }
+.bar { background: #1a56db; height: 2.5px; margin-bottom: 7px; }
+.intro { background: #e6f1fb; border-left: 4px solid #1a56db; padding: 5px 9px; margin-bottom: 8px; font-size: 8px; color: #0f1f4d; line-height: 1.5; }
+.sec { margin-bottom: 8px; border: 1px solid #e2e8f0; border-radius: 4px; overflow: hidden; page-break-inside: avoid; }
+.sg { margin-top: 10px; }
+.sh { background: #0f1f4d; color: #fff; padding: 5px 7px 5px 11px; font-size: 8.5px; font-weight: 700; border-left: 4px solid #1a56db; }
+table { width: 100%; border-collapse: collapse; }
+thead tr th { background: #1a3070; color: #fff; padding: 4px 5px; font-size: 7.5px; font-weight: 700; text-align: left; }
+td { padding: 4px 3px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.rn { width: 18px; background: #e8ecf5; color: #7888b0; font-size: 7px; text-align: center; padding: 4px 0; }
+.cb { width: 14px; }
+.cb::before { content: ""; display: block; width: 10px; height: 10px; border: 1.5px solid #94a3b8; border-radius: 2px; margin: 1px auto; }
+.it { font-size: 8.5px; line-height: 1.45; padding: 4px 5px; }
+.cta { background: #1a56db; color: #fff; padding: 9px 12px; border-radius: 4px; font-size: 9px; font-weight: 700; text-align: center; margin: 8px 0; line-height: 1.4; }
+.auth { border-top: 2px solid #e2e8f0; margin-top: 12px; padding-top: 8px; display: flex; gap: 9px; align-items: flex-start; }
+.av { background: #1a56db; color: #fff; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; flex-shrink: 0; }
+.an { font-size: 9px; font-weight: 700; color: #0f1f4d; margin-bottom: 2px; }
+.at { font-size: 7.5px; color: #64748b; line-height: 1.5; }
+.pbtn { display: block; width: 100%; padding: 13px; background: #1a56db; color: #fff; border: none; font-size: 14px; font-weight: 700; font-family: Arial, sans-serif; cursor: pointer; text-align: center; margin-bottom: 12px; border-radius: 6px; }
+@media print { .pbtn { display: none !important; } @page { margin: 13mm 15mm 15mm 15mm; size: A4; } html { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+</style>
+</head>
+<body>
+<button class="pbtn" onclick="window.print()">🖨&nbsp;&nbsp;Click Here to Print / Save as PDF</button>
+<div class="hdr"><div class="hi">
+  <div class="hl">M</div>
+  <div>
+    <div class="ht">${topic} — 25-Point Self-Audit</div>
+    <div class="hs">25-Point Operator Self-Audit &bull; modonix.com</div>
+    <div class="ha">Ahmed Abuswa &bull; Head of E-Commerce Operations &bull; Modonix</div>
+  </div>
+</div></div>
+<div class="bar"></div>
+<div class="intro">How to use: Go through each section and check every box that applies. Tally your score at the end. Any unchecked box is a documented operational gap.</div>
 
-SECTION: [Section 2 name]
-- [item]
-- [item]
-- [item]
-- [item]
-- [item]
+<div class="sec"><div class="sh">Inventory Management</div><table><tbody>
+<tr style="background:#fff"><td class="rn">1</td><td class="cb"></td><td class="it">Do you have real-time visibility into stock levels across all channels?</td></tr>
+<tr style="background:#f8faff"><td class="rn">2</td><td class="cb"></td><td class="it">Can you predict stockouts 2-3 weeks before they happen?</td></tr>
+<tr style="background:#fff"><td class="rn">3</td><td class="cb"></td><td class="it">Do you track velocity trends by SKU and automatically adjust reorder points?</td></tr>
+<tr style="background:#f8faff"><td class="rn">4</td><td class="cb"></td><td class="it">Are dead stock items identified and liquidated within 90 days?</td></tr>
+<tr style="background:#fff"><td class="rn">5</td><td class="cb"></td><td class="it">Do you have separate safety stock calculations for A/B/C category items?</td></tr>
+</tbody></table></div>
 
-SECTION: [Section 3 name]
-- [item]
-- [item]
-- [item]
-- [item]
-- [item]
+<div class="sec"><div class="sh">Financial Operations</div><table><tbody>
+<tr style="background:#fff"><td class="rn">6</td><td class="cb"></td><td class="it">Can you generate profit margin reports by SKU within 24 hours?</td></tr>
+<tr style="background:#f8faff"><td class="rn">7</td><td class="cb"></td><td class="it">Are all marketplace fees automatically reconciled and categorized?</td></tr>
+<tr style="background:#fff"><td class="rn">8</td><td class="cb"></td><td class="it">Do you track customer acquisition cost (CAC) by channel?</td></tr>
+<tr style="background:#f8faff"><td class="rn">9</td><td class="cb"></td><td class="it">Is cash flow forecasted 13 weeks ahead based on order patterns?</td></tr>
+<tr style="background:#fff"><td class="rn">10</td><td class="cb"></td><td class="it">Are chargebacks and refunds processed within your SOP timeframes?</td></tr>
+</tbody></table></div>
 
-SECTION: [Section 4 name]
-- [item]
-- [item]
-- [item]
-- [item]
-- [item]
+<div class="sec"><div class="sh">Channel Management</div><table><tbody>
+<tr style="background:#fff"><td class="rn">11</td><td class="cb"></td><td class="it">Are product listings optimized with consistent data across all channels?</td></tr>
+<tr style="background:#f8faff"><td class="rn">12</td><td class="cb"></td><td class="it">Do you monitor competitor pricing and adjust automatically?</td></tr>
+<tr style="background:#fff"><td class="rn">13</td><td class="cb"></td><td class="it">Are you maintaining target profit margins on each marketplace?</td></tr>
+<tr style="background:#f8faff"><td class="rn">14</td><td class="cb"></td><td class="it">Can you track performance metrics (conversion, traffic, rankings) by channel?</td></tr>
+<tr style="background:#fff"><td class="rn">15</td><td class="cb"></td><td class="it">Do you have backup plans for suspended listings or account issues?</td></tr>
+</tbody></table></div>
 
-SECTION: [Section 5 name]
-- [item]
-- [item]
-- [item]
-- [item]
-- [item]
+<div class="sec"><div class="sh">Customer Operations</div><table><tbody>
+<tr style="background:#fff"><td class="rn">16</td><td class="cb"></td><td class="it">Is order fulfillment automated with same-day processing?</td></tr>
+<tr style="background:#f8faff"><td class="rn">17</td><td class="cb"></td><td class="it">Are customer service inquiries resolved within your target response time?</td></tr>
+<tr style="background:#fff"><td class="rn">18</td><td class="cb"></td><td class="it">Do you track and minimize "Where is my order?" (WISMO) tickets?</td></tr>
+<tr style="background:#f8faff"><td class="rn">19</td><td class="cb"></td><td class="it">Are returns processed efficiently with minimal manual work?</td></tr>
+<tr style="background:#fff"><td class="rn">20</td><td class="cb"></td><td class="it">Do you have systems to identify and reward repeat customers?</td></tr>
+</tbody></table></div>
 
-SCORING:
-0-11: Critical — your operation has structural failures that are actively destroying margin
-12-19: Moderate — gaps exist in 2 to 3 areas that need immediate attention
-20-25: Strong — your systems are solid, focus on optimization
+<div class="sec"><div class="sh">Growth Systems</div><table><tbody>
+<tr style="background:#fff"><td class="rn">21</td><td class="cb"></td><td class="it">Are advertising campaigns monitored daily with clear ROAS targets?</td></tr>
+<tr style="background:#f8faff"><td class="rn">22</td><td class="cb"></td><td class="it">Do you have documented SOPs for scaling successful product launches?</td></tr>
+<tr style="background:#fff"><td class="rn">23</td><td class="cb"></td><td class="it">Can you identify your most profitable customer segments and target them?</td></tr>
+<tr style="background:#f8faff"><td class="rn">24</td><td class="cb"></td><td class="it">Are you tracking leading indicators (not just sales) to predict growth?</td></tr>
+<tr style="background:#fff"><td class="rn">25</td><td class="cb"></td><td class="it">Do you have clear criteria for when to expand to new channels or markets?</td></tr>
+</tbody></table></div>
+
+<div class="sec sg"><div class="sh">SCORING GUIDE</div><table><thead><tr><th style="width:55px">Score</th><th style="width:78px">Level</th><th>What it means</th></tr></thead><tbody>
+<tr style="background:#fef2f2"><td style="padding:5px 6px;font-weight:700;color:#0f1f4d;font-size:8px">0-11</td><td style="padding:5px 6px;font-weight:700;color:#7f1d1d;font-size:8px">CRITICAL</td><td style="padding:5px 6px;font-size:8px">Your operation has structural failures that are actively destroying margin</td></tr>
+<tr style="background:#fffbeb"><td style="padding:5px 6px;font-weight:700;color:#0f1f4d;font-size:8px">12-19</td><td style="padding:5px 6px;font-weight:700;color:#92400e;font-size:8px">MODERATE</td><td style="padding:5px 6px;font-size:8px">Gaps exist in 2 to 3 areas that need immediate attention</td></tr>
+<tr style="background:#f0fff4"><td style="padding:5px 6px;font-weight:700;color:#0f1f4d;font-size:8px">20-25</td><td style="padding:5px 6px;font-weight:700;color:#14532d;font-size:8px">STRONG</td><td style="padding:5px 6px;font-size:8px">Your systems are solid, focus on optimization</td></tr>
+</tbody></table></div>
+
+<div class="cta">Book a free data audit at modonix.com/services — we identify your top 3 margin leaks in one session. Written by Ahmed Abuswa, Modonix.com</div>
+
+<div class="auth">
+  <div class="av">AA</div>
+  <div>
+    <div class="an">Ahmed Abuswa</div>
+    <div class="at">Head of E-Commerce Operations at Modonix</div>
+    <div class="at">modonix.com &bull; modonix.com/services</div>
+  </div>
+</div>
+</body></html>
 
 CTA: Book a free data audit at modonix.com/services — we identify your top 3 margin leaks in one session. Written by Ahmed Abuswa, Modonix.com`;
 
