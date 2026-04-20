@@ -508,8 +508,6 @@ CSS CLASSES: body,h1,h2,h3,p,blockquote,blockquote strong,table,th,td,tr:nth-chi
 
 ===PDF_CHECKLIST_START===
 
-===PDF_CHECKLIST_START===
-
 After the blog HTML, output the line above exactly, then this checklist in complete HTML format:
 
 <!DOCTYPE html>
@@ -614,9 +612,7 @@ td { padding: 4px 3px; border-bottom: 1px solid #f1f5f9; vertical-align: middle;
     <div class="at">modonix.com &bull; modonix.com/services</div>
   </div>
 </div>
-</body></html>
-
-CTA: Book a free data audit at modonix.com/services — we identify your top 3 margin leaks in one session. Written by Ahmed Abuswa, Modonix.com`;
+</body></html>`;
 
   document.getElementById('prompt-body').textContent=promptText;
   document.getElementById('prompt-output').className='output-card show';
@@ -639,9 +635,17 @@ function processOutput(){
   } else {
     // Detect what was pasted
     const hasHTML=raw.trim().startsWith('<')||/<!DOCTYPE|<html|<style/i.test(raw);
-    const hasChecklist=raw.includes('TITLE:')&&raw.includes('SECTION:')&&raw.includes('\n- ');
+    const hasChecklist=raw.includes('TITLE:')&&raw.includes('SECTION:')&&raw.includes('\n- ') || (raw.includes('<!DOCTYPE html') && raw.includes('25-Point Self-Audit'));
     if(hasChecklist&&!hasHTML){
       // Checklist text only — no blog HTML
+      blogHTML='';
+      checklistText=raw;
+    } else if(hasChecklist&&hasHTML && !raw.includes('<!DOCTYPE html')){
+      // Old plain text checklist
+      blogHTML=extractHTML(raw);
+      checklistText='';
+    } else if(raw.includes('<!DOCTYPE html') && raw.includes('25-Point Self-Audit')){
+      // New HTML checklist
       blogHTML='';
       checklistText=raw;
     } else {
@@ -655,8 +659,8 @@ function processOutput(){
     const tm=blogHTML.match(/<title>(.*?)<\/title>/i)||blogHTML.match(/<h1[^>]*>(.*?)<\/h1>/i);
     currentTopic=tm?tm[1].replace(/<[^>]+>/g,'').trim():'modonix-blog';
   } else if(checklistText){
-    const tm=checklistText.match(/^TITLE:\s*(.+)/m);
-    currentTopic=tm?tm[1].replace(/\s*Operator Checklist.*$/i,'').trim():'modonix-checklist';
+    const tm=checklistText.match(/^TITLE:\s*(.+)/m) || checklistText.match(/<title>(.*?)<\/title>/i);
+    currentTopic=tm?tm[1].replace(/\s*Operator Checklist.*$/i,'').replace(/<[^>]+>/g,'').replace(/—.*$/,'').trim():'modonix-checklist';
   }
 
   if(!blogHTML&&!checklistText){
@@ -698,6 +702,16 @@ function downloadBlogHTML(){
 
 function downloadPDF(){
   if(!checklistText){alert('No checklist found. Paste the checklist text first and click Process.');return;}
+  
+  // If it's already HTML, just show it directly
+  if(checklistText.includes('<!DOCTYPE html')){
+    const modalBody = document.getElementById('pdf-modal-body');
+    modalBody.innerHTML = checklistText.replace('<!DOCTYPE html', '').replace('<html><head>', '').replace(/<title>.*?<\/title>/, '').replace('<style>', '<style>').replace('</head><body>', '').replace('</body></html>', '');
+    document.getElementById('pdf-modal').style.display='block';
+    return;
+  }
+  
+  // Legacy parsing for old plain text format
   const lines=checklistText.split('\n');
   let title=currentTopic+' Operator Checklist';
   let body='',inSec=false,rowIdx=0,inScore=false;
@@ -830,6 +844,22 @@ function updateKeyStatus(){
 function downloadPDFfile(){
   if(!checklistText){ alert('No checklist found. Paste checklist text and click Process first.'); return; }
 
+  // If already HTML, download directly
+  if(checklistText.includes('<!DOCTYPE html')){
+    const slug = (currentTopic||'checklist').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').substring(0,50);
+    const blob = new Blob([checklistText], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = slug + '-checklist.html';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 3000);
+    return;
+  }
+
+  // Legacy fallback for old plain text format
   const lines = checklistText.split('\n');
   let title = (currentTopic||'Checklist') + ' — 25-Point Self-Audit';
   let sectionsHTML = '';
