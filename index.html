@@ -23,7 +23,7 @@ body { font-family: var(--font-mono); font-size: 13px; color: var(--text); backg
 body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(26,86,219,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(26,86,219,0.04) 1px,transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 0; }
 #app { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
 
-.header { display: flex; align-items: center; gap: 16px; margin-bottom: 1.5rem; }
+.header { display: flex; align-items: center; gap: 16px; margin-bottom: 1.5rem; flex-wrap: wrap; }
 .logo { width: 44px; height: 44px; background: var(--blue); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 20px; font-weight: 800; color: #fff; flex-shrink: 0; box-shadow: 0 0 20px rgba(26,86,219,0.4); }
 .header-text h1 { font-family: var(--font-display); font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
 .header-text p { font-size: 11px; color: var(--muted); margin-top: 2px; }
@@ -85,6 +85,7 @@ select option { background: var(--navy2); }
 .mini-btn { padding: 5px 10px; font-family: var(--font-mono); font-size: 10px; font-weight: 600; border: 1px solid var(--border); border-radius: 5px; background: var(--bg2); color: var(--muted); cursor: pointer; }
 .mini-btn:hover { border-color: var(--blue); color: #93b4f5; }
 .mini-btn.danger:hover { border-color: #dc2626; color: #fca5a5; }
+.mini-btn.armed { border-color: #dc2626; background: rgba(220,38,38,0.18); color: #fca5a5; }
 
 .result-block { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 1rem; }
 .result-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--card2); border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 8px; }
@@ -143,6 +144,7 @@ select option { background: var(--navy2); }
       <h1>Modonix Content Engine</h1>
       <p>Mine, review, generate, validate, publish. One pass, no chat.</p>
     </div>
+    <button class="mini-btn danger" id="resetBtn" onclick="resetRun()" style="margin-left:auto;padding:9px 16px;font-size:11px;white-space:nowrap;">Start new post</button>
   </div>
 
   <div class="tabs">
@@ -245,7 +247,7 @@ select option { background: var(--navy2); }
       <div id="fp-list"></div>
       <div class="btn-row" style="margin-top:12px;">
         <button class="mini-btn" onclick="addBlankPoint()">+ Add point</button>
-        <button class="mini-btn danger" onclick="clearPoints()">Clear all</button>
+        <button class="mini-btn danger" id="clearPtsBtn" onclick="clearPoints()">Clear all</button>
       </div>
     </div>
     <div class="card">
@@ -528,6 +530,78 @@ function setStatus(id, kind, msg){
 }
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+/* ---------- reset ---------- */
+/* No confirm() anywhere: it silently returns false in sandboxed frames,
+   which made the click look dead. Two-click arming instead. */
+let resetArmed = false, resetTimer = null;
+
+function flashBtn(btn, msg, ms){
+  if(!btn) return;
+  const orig = btn.dataset.label || btn.textContent;
+  btn.dataset.label = orig;
+  btn.textContent = msg;
+  setTimeout(() => { btn.textContent = btn.dataset.label; }, ms || 1800);
+}
+
+function disarmReset(){
+  resetArmed = false;
+  clearTimeout(resetTimer);
+  const btn = document.getElementById('resetBtn');
+  if(btn){ btn.classList.remove('armed'); btn.textContent = 'Start new post'; btn.dataset.label = 'Start new post'; }
+}
+
+function resetRun(){
+  const btn = document.getElementById('resetBtn');
+  const has = STATE.points.length || STATE.blogHTML || STATE.topic;
+
+  if(!has){ disarmReset(); flashBtn(btn, 'Already empty'); return; }
+
+  if(!resetArmed){
+    resetArmed = true;
+    if(btn){ btn.dataset.label = 'Start new post'; btn.textContent = 'Click again to clear'; btn.classList.add('armed'); }
+    clearTimeout(resetTimer);
+    resetTimer = setTimeout(disarmReset, 5000);
+    return;
+  }
+
+  disarmReset();
+  try { doReset(); flashBtn(btn, 'Cleared'); }
+  catch(e){ alert('Reset failed: ' + e.message); }
+}
+
+function doReset(){
+  STATE = { topic:'', articleType:'new', updateMonth:'', points:[], blogHTML:'', checklistHTML:'', metaData:null };
+  PARTS = { plan:null, opening:null, sections:[], closing:null, checklist:null, meta:null };
+  STAGES = [];
+  try { localStorage.removeItem('modonix_engine_state'); } catch(e){}
+
+  ['topic','pageurl','redditPaste','manualPaste','update-month','legacy-paste','score-input','score-keyword']
+    .forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  const at = document.getElementById('article-type'); if(at) at.value = 'new';
+  toggleDate();
+
+  ['status-core','status-reddit'].forEach(id => { const el = document.getElementById(id); if(el) el.className = 'status'; });
+  const hide = (id, disp) => { const el = document.getElementById(id); if(el) el.style.display = disp; };
+  hide('stage-card','none'); hide('validator-card','none');
+  hide('output-blocks','none'); hide('output-empty','block'); hide('score-results','none');
+  const sl = document.getElementById('stage-list'); if(sl) sl.innerHTML = '';
+  const gb = document.getElementById('gen-badge');
+  if(gb){ gb.textContent = 'not started'; gb.className = 'badge'; }
+
+  ['alert-review','alert-gen','alert-legacy','alert-score','alert-topics'].forEach(hideA);
+  TAB_IDS.forEach(t => setDot(t, false));
+  renderPoints();
+  switchTab('mine');
+}
+
+/* Non-blocking. Never cancels the run, just reports what it appended to. */
+function staleTopicNote(newTopic){
+  if(!STATE.points.length) return '';
+  const old = (STATE.topic || '').trim();
+  if(!old || old.toLowerCase() === String(newTopic).trim().toLowerCase()) return '';
+  return ' Note: added to ' + STATE.points.length + ' existing points from "' + old + '". Use Start new post if you meant to begin fresh.';
+}
+
 /* ---------- api key ---------- */
 let API_KEY = localStorage.getItem('modonix_api_key') || '';
 function saveApiKey(){
@@ -667,6 +741,7 @@ async function mineCore(){
   const count = document.getElementById('mine-count').value;
   if(!topic && !url){ setStatus('status-core','error','Enter a topic, a URL, or both.'); return; }
   if(url && !/^https?:\/\//i.test(url)){ setStatus('status-core','error','URL must start with http:// or https://'); return; }
+  const note1 = staleTopicNote(topic || url);
 
   const btn = document.getElementById('mineBtn');
   btn.disabled = true;
@@ -678,7 +753,7 @@ async function mineCore(){
     items.forEach(i => STATE.points.push({ text: i.text, url: i.url, source: 'quora' }));
     STATE.topic = STATE.topic || topic;
     saveState(); setDot('mine', true); setDot('review', true);
-    setStatus('status-core','done', items.length + ' points added. Open Review to check them before generating.');
+    setStatus('status-core','done', items.length + ' points added. Open Review to check them before generating.' + note1);
   } catch(e){
     setStatus('status-core','error','Mining failed: ' + e.message);
   } finally { btn.disabled = false; }
@@ -695,6 +770,7 @@ async function mineReddit(){
   const topic  = document.getElementById('topic').value.trim();
   const pasted = document.getElementById('redditPaste').value.trim();
   if(!pasted){ setStatus('status-reddit','error','Paste some Reddit URLs or thread content first.'); return; }
+  const note2 = topic ? staleTopicNote(topic) : '';
   const btn = document.getElementById('redditMineBtn');
   btn.disabled = true;
   setStatus('status-reddit','working','Structuring your pasted Reddit content.');
@@ -704,7 +780,7 @@ async function mineReddit(){
     if(!items.length) throw new Error('Could not parse any failure points from the response.');
     items.forEach(i => STATE.points.push({ text: i.text, url: /^https?:/i.test(i.url) ? i.url : '', source: 'reddit' }));
     saveState(); setDot('mine', true); setDot('review', true);
-    setStatus('status-reddit','done', items.length + ' points added. Open Review to check them.');
+    setStatus('status-reddit','done', items.length + ' points added. Open Review to check them.' + note2);
   } catch(e){
     setStatus('status-reddit','error','Extraction failed: ' + e.message);
   } finally { btn.disabled = false; }
@@ -773,7 +849,24 @@ function movePoint(i, dir){
   saveState(); renderPoints();
 }
 function addBlankPoint(){ STATE.points.push({text:'', url:'', source:'manual'}); saveState(); renderPoints(); }
-function clearPoints(){ if(confirm('Delete all failure points?')){ STATE.points=[]; saveState(); renderPoints(); } }
+let clearArmed = false, clearTimer = null;
+function clearPoints(){
+  const btn = document.getElementById('clearPtsBtn');
+  if(!STATE.points.length){ flashBtn(btn, 'Already empty'); return; }
+  if(!clearArmed){
+    clearArmed = true;
+    if(btn){ btn.dataset.label = 'Clear all'; btn.textContent = 'Click again to clear'; btn.classList.add('armed'); }
+    clearTimeout(clearTimer);
+    clearTimer = setTimeout(() => {
+      clearArmed = false;
+      if(btn){ btn.classList.remove('armed'); btn.textContent = 'Clear all'; }
+    }, 5000);
+    return;
+  }
+  clearArmed = false; clearTimeout(clearTimer);
+  if(btn) btn.classList.remove('armed');
+  STATE.points = []; saveState(); renderPoints();
+}
 
 /* ============================================================
    TAB 3: GENERATION
